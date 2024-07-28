@@ -1,18 +1,16 @@
 #![forbid(unsafe_code)]
 use {
     fltk::{
-        button::Button,
-        enums::*,
+        app, dialog,
+        enums::{CallbackTrigger, Color, Event, Font, FrameType},
         frame::Frame,
         group::Flex,
         image::SvgImage,
         menu::Choice,
-        misc::InputChoice,
+        misc::{InputChoice, Progress},
         prelude::*,
         text::{StyleTableEntry, TextBuffer, TextDisplay, WrapMode},
-        valuator::Dial,
         window::Window,
-        *,
     },
     fltk_theme::{color_themes, ColorTheme},
     json_tools::{Buffer, BufferType, Lexer, Span, TokenType},
@@ -20,60 +18,53 @@ use {
     ureq::{Error, Response},
 };
 
+const PAD: i32 = 10;
+const HEIGHT: i32 = 3 * PAD;
+const WIDTH: i32 = 3 * HEIGHT;
+
 #[derive(Clone)]
 struct Widget {
     buffer: TextBuffer,
     choice: Choice,
     input: InputChoice,
     text: TextDisplay,
-    status: Frame,
-    dial: Dial,
+    status: Progress,
 }
 
 impl Widget {
     fn view() -> Self {
         let mut window = crate::window();
-        let mut page = Flex::default_fill().column(); //PAGE
+        let mut page = Flex::default_fill().column();
 
-        let mut header = Flex::default(); //HEADER
+        let mut header = Flex::default();
         header.fixed(&Frame::default(), WIDTH);
         let choice = crate::choice();
+        header.fixed(&choice, WIDTH);
         header.fixed(&Frame::default(), WIDTH);
         let input = crate::input();
-        header.fixed(&crate::info(), HEIGHT);
+        let status = crate::progress().with_label("Status");
+        header.fixed(&status, WIDTH);
         header.end();
+        header.set_pad(PAD);
+        page.fixed(&header, HEIGHT);
 
-        let hero = Flex::default(); //HERO
+        let hero = Flex::default();
         let buffer = TextBuffer::default();
         let text = crate::text(buffer.clone());
         hero.end();
 
-        let mut footer = Flex::default(); //FOOTER
-        footer.fixed(&Frame::default().with_label("Status: "), WIDTH);
-        let status = Frame::default().with_align(Align::Left | Align::Inside);
-        let dial = crate::dial();
-        footer.fixed(&dial, HEIGHT);
-        footer.end();
-
         page.end();
+        page.set_pad(PAD);
+        page.set_margin(PAD);
+        page.set_frame(FrameType::FlatBox);
         window.end();
         window.show();
-        {
-            header.set_pad(PAD);
-            header.fixed(&choice, WIDTH);
-            page.fixed(&header, HEIGHT);
-            page.fixed(&footer, HEIGHT);
-            page.set_pad(PAD);
-            page.set_margin(PAD);
-            page.set_frame(FrameType::FlatBox);
-        }
         let mut component = Self {
             buffer,
             choice,
             input,
             text,
             status,
-            dial,
         };
         let mut clone = component.clone();
         component.input.set_callback(move |_| clone.update());
@@ -102,7 +93,7 @@ impl Widget {
         while !handler.is_finished() {
             app::wait();
             app::sleep(0.02);
-            self.dial.do_callback();
+            self.status.do_callback();
         }
         if let Ok(req) = handler.join() {
             match req {
@@ -112,7 +103,7 @@ impl Widget {
                         self.text.buffer().unwrap().set_text(&json);
                         self.fill_style_buffer(&json);
                         self.status.set_label("200 OK");
-                        self.status.set_label_color(enums::Color::Yellow);
+                        self.status.set_label_color(Color::Yellow);
                     } else {
                         dialog::message_default("Error parsing json");
                     }
@@ -120,12 +111,13 @@ impl Widget {
                 Err(Error::Status(code, response)) => {
                     self.status
                         .set_label(&format!("{} {}", code, response.status_text()));
-                    self.status.set_label_color(enums::Color::Red);
+                    self.status.set_label_color(Color::Red);
                 }
                 Err(e) => {
                     dialog::message_default(&e.to_string());
                 }
             }
+            self.status.set_value(0f64);
         };
     }
     fn fill_style_buffer(&mut self, s: &str) {
@@ -153,17 +145,19 @@ impl Widget {
 fn main() -> Result<(), FltkError> {
     Widget::view();
     ColorTheme::new(color_themes::DARK_THEME).apply();
-    app::set_font(Font::Courier);
     app::App::default().run()
 }
 
 fn window() -> Window {
+    const WIDTH: i32 = 640;
+    const HEIGHT: i32 = 360;
     const NAME: &str = "FlResters";
     let mut element = Window::default()
-        .with_size(960, 540)
+        .with_size(WIDTH, HEIGHT)
         .with_label(NAME)
         .center_screen();
-    element.make_resizable(false);
+    element.size_range(WIDTH, HEIGHT, 0, 0);
+    element.make_resizable(true);
     element.set_xclass(NAME);
     element.set_icon(Some(
         SvgImage::from_data(include_str!("../../assets/logo.svg")).unwrap(),
@@ -193,16 +187,6 @@ fn text(buffer: TextBuffer) -> TextDisplay {
     element
 }
 
-fn info() -> Button {
-    let mut element = Button::default().with_label("ℹ️");
-    element.set_label_size(18);
-    element.set_frame(FrameType::NoBox);
-    element.set_callback(move |_| {
-        dialog::message_default("Resters was created using Rust and fltk-rs. It is MIT licensed!")
-    });
-    element
-}
-
 fn choice() -> Choice {
     let mut element = Choice::default().with_label("Method: ");
     element.add_choice("GET|POST");
@@ -223,22 +207,17 @@ fn input() -> InputChoice {
     element
 }
 
-fn dial() -> Dial {
-    const DIAL: u8 = 120;
-    let mut element = Dial::default();
-    element.deactivate();
-    element.set_maximum((DIAL / 4 * 3) as f64);
-    element.set_precision(0);
-    element.set_callback(move |dial| {
-        dial.set_value(if dial.value() == (DIAL - 1) as f64 {
-            dial.minimum()
+fn progress() -> Progress {
+    const MAX: u8 = 120;
+    let mut element = Progress::default();
+    element.set_maximum((MAX / 4 * 3) as f64);
+    element.set_value(element.minimum());
+    element.set_callback(move |progress| {
+        progress.set_value(if progress.value() == (MAX - 1) as f64 {
+            progress.minimum()
         } else {
-            dial.value() + 1f64
+            progress.value() + 1f64
         })
     });
     element
 }
-
-const PAD: i32 = 10;
-const HEIGHT: i32 = PAD * 3;
-const WIDTH: i32 = HEIGHT * 3;

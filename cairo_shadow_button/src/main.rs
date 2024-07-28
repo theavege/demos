@@ -139,6 +139,14 @@ fn menu() -> MenuButton {
             app::handle_main(DEC).unwrap();
         },
     );
+    element.add(
+        "@#1+  Quit",
+        Shortcut::Ctrl | '-',
+        MenuFlag::Normal,
+        move |_| {
+            app::handle_main(Event::Close).unwrap();
+        },
+    );
     element
 }
 

@@ -9,6 +9,7 @@ pub struct Model {
     pub curr: usize,
     pub size: i32,
 }
+
 impl Model {
     pub fn default() -> Self {
         if let Ok(value) = fs::read(file()) {
