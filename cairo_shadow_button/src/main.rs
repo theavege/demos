@@ -6,11 +6,10 @@ use {
         app,
         button::Button,
         draw,
-        enums::{Align, Color, ColorDepth, Cursor, Event, Font, FrameType, Shortcut},
+        enums::{Align, Color, ColorDepth, Event, Font},
         frame::Frame,
         group::Flex,
         image::{RgbImage, SvgImage},
-        menu::{MenuButton, MenuButtonType, MenuFlag},
         prelude::*,
         window::Window,
     },
@@ -18,15 +17,68 @@ use {
     std::{cell::RefCell, rc::Rc},
 };
 
-const HEARTBEAT: Event = Event::from_i32(404);
-const INC: Event = Event::from_i32(405);
-const DEC: Event = Event::from_i32(406);
+struct View {
+    value: Frame,
+    inc: Button,
+    dec: Button,
+}
+
+impl View {
+    fn default() -> Self {
+        Self {
+            value: crate::frame(),
+            dec: crate::button().with_label("@<"),
+            inc: crate::button().with_label("@>"),
+        }
+    }
+    fn design(&self) {
+        let mut vbox = Flex::default()
+            .with_size(600, 200)
+            .center_of_parent()
+            .column();
+        vbox.end();
+        vbox.set_pad(0);
+        vbox.set_margin(0);
+        {
+            let mut hbox = Flex::default();
+            hbox.end();
+            hbox.add(&self.dec);
+            hbox.add(&self.value);
+            hbox.add(&self.inc);
+            vbox.add(&hbox);
+        }
+    }
+    fn update(&mut self, state: Rc<RefCell<Model>>) {
+        self.inc.set_callback({
+            let state = state.clone();
+            let mut value = self.value.clone();
+            move |_| {
+                state.borrow_mut().inc();
+                value.do_callback();
+            }
+        });
+        self.dec.set_callback({
+            let state = state.clone();
+            let mut value = self.value.clone();
+            move |_| {
+                state.borrow_mut().dec();
+                value.do_callback();
+            }
+        });
+        self.value.set_callback({
+            let state = state.clone();
+            move |frame| {
+                frame.set_label(&state.borrow().value.to_string());
+            }
+        });
+        self.value.do_callback();
+    }
+}
 
 fn main() -> Result<(), FltkError> {
-    let app = app::App::default();
+    let application = app::App::default();
     crate::window();
-    app::handle_main(HEARTBEAT).unwrap();
-    app.run()
+    application.run()
 }
 
 fn window() {
@@ -41,112 +93,21 @@ fn window() {
     ));
     element.set_color(Color::from_u32(0xfdf6e3));
     element.make_resizable(false);
-    let state = Rc::from(RefCell::from(Model::default()));
-    crate::view(state.clone());
+    let mut view = View::default();
+    view.design();
+    view.update(Rc::from(RefCell::from(Model::default())));
     element.end();
     element.show();
-    element.handle(move |window, event| {
-        if event == HEARTBEAT {
-            window.set_label(&format!("{} - {NAME}", state.borrow().value));
-            false
-        } else if app::event() == Event::Close {
+    element.set_callback(move |_| {
+        if app::event() == Event::Close {
             app::quit();
-            true
-        } else {
-            false
         }
     });
 }
 
-fn view(state: Rc<RefCell<Model>>) {
-    let mut page = Flex::default()
-        .with_size(600, 200)
-        .center_of_parent()
-        .column();
-    {
-        let hero = Flex::default();
-        crate::button().with_label("@#<").set_callback(move |_| {
-            app::handle_main(crate::DEC).unwrap();
-        });
-        crate::frame(state.clone());
-        crate::button().with_label("@#>").set_callback(move |_| {
-            app::handle_main(crate::INC).unwrap();
-        });
-        hero.end();
-    }
-    page.end();
-    page.set_pad(0);
-    page.set_margin(0);
-    page.handle(move |_, event| match event {
-        INC => {
-            state.borrow_mut().inc();
-            app::handle_main(HEARTBEAT).unwrap();
-            true
-        }
-        DEC => {
-            state.borrow_mut().dec();
-            app::handle_main(HEARTBEAT).unwrap();
-            true
-        }
-        _ => false,
-    });
-}
-
-fn frame(state: Rc<RefCell<Model>>) -> Frame {
+fn frame() -> Frame {
     let mut element = Frame::default();
     element.set_label_size(60);
-    element.handle(move |frame, event| match event {
-        Event::Push => match app::event_mouse_button() {
-            app::MouseButton::Right => {
-                crate::menu().popup();
-                true
-            }
-            _ => false,
-        },
-        HEARTBEAT => {
-            frame.set_label(&state.clone().borrow().value.to_string());
-            true
-        }
-        Event::Enter => {
-            frame.window().unwrap().set_cursor(Cursor::Hand);
-            true
-        }
-        Event::Leave => {
-            frame.window().unwrap().set_cursor(Cursor::Arrow);
-            true
-        }
-        _ => false,
-    });
-    element
-}
-
-fn menu() -> MenuButton {
-    let mut element = MenuButton::default().with_type(MenuButtonType::Popup3);
-    element.set_frame(FrameType::FlatBox);
-    element.add(
-        "@#+  &Increment",
-        Shortcut::Ctrl | '+',
-        MenuFlag::Normal,
-        move |_| {
-            app::handle_main(INC).unwrap();
-        },
-    );
-    element.add(
-        "@#-  &Decrement",
-        Shortcut::Ctrl | '-',
-        MenuFlag::Normal,
-        move |_| {
-            app::handle_main(DEC).unwrap();
-        },
-    );
-    element.add(
-        "@#1+  Quit",
-        Shortcut::Ctrl | '-',
-        MenuFlag::Normal,
-        move |_| {
-            app::handle_main(Event::Close).unwrap();
-        },
-    );
     element
 }
 
