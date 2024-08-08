@@ -69,86 +69,114 @@ jobs:
       working-directory: calculator
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build calendar
       working-directory: calendar
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build csv
       working-directory: csv
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build egui
       working-directory: egui
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build femtovg
       working-directory: femtovg
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build ffmpeg
       working-directory: ffmpeg
       shell: bash
       run: |
-        case ${RUNNER_OS} in
-            Linux | macOS) cargo build --quiet || cargo build --verbose;;
-        esac
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build dialect
       working-directory: dialect
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build flmusic
       working-directory: flmusic
       shell: bash
       run: |
-        case ${RUNNER_OS} in
-            Linux | macOS) cargo build --quiet || cargo build --verbose;;
-        esac
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build picture
       working-directory: picture
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build resters
       working-directory: resters
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build fltext
       working-directory: fltext
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build framebuffer
       working-directory: framebuffer
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build glium
       working-directory: glium
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build glow
       working-directory: glow
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build glut
       working-directory: glut
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build image
       working-directory: image
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build inner
       working-directory: inner
       shell: bash
@@ -174,37 +202,51 @@ jobs:
       working-directory: musicplayer
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build opengl
       working-directory: opengl
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build pixels
       working-directory: pixels
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build plotters
       working-directory: plotters
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build raqote
       working-directory: raqote
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build rounded-svg
       working-directory: rounded-svg
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build speedy2d
       working-directory: speedy2d
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build systray
       working-directory: systray
       shell: bash
@@ -216,22 +258,30 @@ jobs:
       working-directory: terminal
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build tinyskia
       working-directory: tinyskia
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build web-todo
       working-directory: web-todo
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build web-todo2
       working-directory: web-todo2
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
     - name: Build webview
       working-directory: webview
       shell: bash
@@ -250,4 +300,6 @@ jobs:
       working-directory: wgpu
       shell: bash
       run: |
-        cargo build --quiet || cargo build --verbose
+        if [[ ${RUNNER_OS} == "Linux" ]]; then
+            cargo build --quiet || cargo build --verbose
+        fi
