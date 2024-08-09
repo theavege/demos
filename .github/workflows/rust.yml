@@ -282,13 +282,6 @@ jobs:
         if [[ ${RUNNER_OS} == "Linux" ]]; then
             cargo build --quiet || cargo build --verbose
         fi
-    - name: Build webview
-      working-directory: webview
-      shell: bash
-      run: |
-        if [[ ${RUNNER_OS} == "Linux" ]]; then
-            cargo build --quiet || cargo build --verbose
-        fi
     - name: Build xterm
       working-directory: xterm
       shell: bash

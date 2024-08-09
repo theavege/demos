@@ -31,7 +31,7 @@ impl Model {
             default
         }
     }
-    pub fn save(&mut self) {
+    pub fn save(&self) {
         fs::write(file(), rmp_serde::to_vec(&self).unwrap()).unwrap();
     }
     pub fn theme(&mut self) {

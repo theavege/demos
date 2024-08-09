@@ -17,7 +17,11 @@ use {
     std::{cell::RefCell, rc::Rc},
 };
 
+const NAME: &str = "FlCairoButton";
+
+#[derive(Debug, Clone)]
 struct View {
+    window: Window,
     value: Frame,
     inc: Button,
     dec: Button,
@@ -26,12 +30,14 @@ struct View {
 impl View {
     fn default() -> Self {
         Self {
-            value: crate::frame(),
-            dec: crate::button().with_label("@<"),
-            inc: crate::button().with_label("@>"),
+            window: crate::build_window(),
+            value: crate::build_frame(),
+            dec: crate::build_button().with_label("@<"),
+            inc: crate::build_button().with_label("@>"),
         }
     }
-    fn design(&self) {
+    fn design(&mut self) {
+        self.window.begin();
         let mut vbox = Flex::default()
             .with_size(600, 200)
             .center_of_parent()
@@ -47,42 +53,56 @@ impl View {
             hbox.add(&self.inc);
             vbox.add(&hbox);
         }
+        self.window.end();
+        self.window.show();
+    }
+    fn load(&mut self) {
+        self.value.do_callback();
+        self.window.do_callback();
     }
     fn update(&mut self, state: Rc<RefCell<Model>>) {
         self.inc.set_callback({
             let state = state.clone();
-            let mut value = self.value.clone();
+            let mut view = self.clone();
             move |_| {
                 state.borrow_mut().inc();
-                value.do_callback();
+                view.load();
             }
         });
         self.dec.set_callback({
             let state = state.clone();
-            let mut value = self.value.clone();
+            let mut view = self.clone();
             move |_| {
                 state.borrow_mut().dec();
-                value.do_callback();
+                view.load();
             }
         });
         self.value.set_callback({
             let state = state.clone();
             move |frame| {
-                frame.set_label(&state.borrow().value.to_string());
+                frame.set_label(&state.borrow().value());
             }
         });
-        self.value.do_callback();
+        self.window.set_callback(move |window| {
+            window.set_label(&format!("{} - {NAME}", state.borrow().value()));
+            if app::event() == Event::Close {
+                state.borrow().save();
+                app::quit();
+            }
+        });
+        self.load();
     }
 }
 
 fn main() -> Result<(), FltkError> {
     let application = app::App::default();
-    crate::window();
+    let mut view = View::default();
+    view.design();
+    view.update(Rc::from(RefCell::from(Model::default())));
     application.run()
 }
 
-fn window() {
-    const NAME: &str = "FlCairoButton";
+fn build_window() -> Window {
     let mut element = Window::default()
         .with_label(NAME)
         .with_size(640, 360)
@@ -93,25 +113,17 @@ fn window() {
     ));
     element.set_color(Color::from_u32(0xfdf6e3));
     element.make_resizable(false);
-    let mut view = View::default();
-    view.design();
-    view.update(Rc::from(RefCell::from(Model::default())));
     element.end();
-    element.show();
-    element.set_callback(move |_| {
-        if app::event() == Event::Close {
-            app::quit();
-        }
-    });
+    element
 }
 
-fn frame() -> Frame {
+fn build_frame() -> Frame {
     let mut element = Frame::default();
     element.set_label_size(60);
     element
 }
 
-fn button() -> Button {
+fn build_button() -> Button {
     let mut element = Button::default();
     element.super_draw(false);
     element.draw(move |button| {
