@@ -1,44 +1,44 @@
-#![allow(dead_code)]
-#[cfg(target_os = "linux")]
 use {
     cairo::Context,
+    cascade::cascade,
     fltk::{enums::*, frame::Frame, image::SvgImage, prelude::*, *},
-    std::{cell::RefCell, rc::Rc},
 };
 
 fn main() -> Result<(), FltkError> {
     let app = app::App::default().with_scheme(app::AppScheme::Base);
-    let mut win = window::Window::default()
+    cascade!(window::Window::default()
         .with_label("Demo: Cairo")
         .with_size(260, 260)
         .center_screen();
-    {
-        let mut box1 = CairoWidget::new(5, 5, 100, 100, "Box1");
-        box1.set_color(Color::Red);
-        box1.set_alpha(100);
-        box1.frm.handle(crate::change);
-        let mut box2 = CairoWidget::new(80, 80, 100, 100, "Box2");
-        box2.set_color(Color::Yellow);
-        box2.set_alpha(100);
-        box2.frm.handle(crate::change);
-        let mut box3 = CairoWidget::new(155, 155, 100, 100, "Box3");
-        box3.set_color(Color::Green);
-        box3.set_alpha(100);
-        box3.frm.handle(crate::change);
-    }
-    win.end();
-    win.set_color(Color::White);
-    win.make_resizable(true);
-    win.show();
-    win.set_icon(Some(
-        SvgImage::from_data(include_str!("../../assets/logo.svg")).unwrap(),
-    ));
+        ..set_color(Color::White);
+        ..make_resizable(true);
+        ..set_icon(Some(
+            SvgImage::from_data(include_str!("../../assets/logo.svg")).unwrap(),
+        ));
+        ..add(&cascade!(
+            cairowidget(5, 5, 100, 100, "Box1");
+            ..set_color(Color::Red);
+            ..handle(crate::change);
+        ));
+        ..add(&cascade!(
+            cairowidget(80, 80, 100, 100, "Box2");
+            ..set_color(Color::Yellow);
+            ..handle(crate::change);
+        ));
+        ..add(&cascade!(
+            cairowidget(155, 155, 100, 100, "Box3");
+            ..set_color(Color::Green);
+            ..handle(crate::change);
+        ));
+        ..end();
+    )
+    .show();
     app::cairo::set_autolink_context(true);
     app.run()
 }
 
 fn draw_box_with_alpha(rect: &mut Frame) {
-    let ctx = unsafe { Context::from_raw_none(app::cairo::cc() as _) };
+    let ctx = unsafe { Context::from_raw_none(fltk::app::cairo::cc() as _) };
     let (r, g, b) = rect.color().to_rgb();
     ctx.save().unwrap();
     ctx.move_to(rect.x() as f64, rect.y() as f64);
@@ -56,40 +56,12 @@ fn draw_box_with_alpha(rect: &mut Frame) {
     ctx.restore().unwrap();
 }
 
-#[derive(Clone)]
-struct CairoWidget {
-    frm: Frame,
-    alpha: Rc<RefCell<u8>>,
+pub fn cairowidget(x: i32, y: i32, w: i32, h: i32, label: &str) -> Frame {
+    let mut element = Frame::new(x, y, w, h, None).with_label(label);
+    element.super_draw_first(false); // required for windows
+    element.draw(draw_box_with_alpha);
+    element
 }
-
-impl CairoWidget {
-    pub fn new(x: i32, y: i32, w: i32, h: i32, label: &str) -> Self {
-        let mut frm = Frame::new(x, y, w, h, None).with_label(label);
-        frm.super_draw_first(false); // required for windows
-        let alpha = Rc::from(RefCell::from(255));
-        frm.draw(draw_box_with_alpha);
-        Self { frm, alpha }
-    }
-
-    pub fn set_alpha(&mut self, val: u8) {
-        *self.alpha.borrow_mut() = val;
-    }
-
-    pub fn alpha(&self) -> u8 {
-        *self.alpha.borrow()
-    }
-
-    pub fn draw<F: FnMut(&mut Self) + 'static>(&mut self, mut cb: F) {
-        let mut frm = self.clone();
-        let mut old_cb = unsafe { frm.draw_data().unwrap() };
-        self.frm.draw(move |_| {
-            old_cb();
-            cb(&mut frm);
-        });
-    }
-}
-
-fltk::widget_extends!(CairoWidget, Frame, frm);
 
 fn change(frame: &mut Frame, event: Event) -> bool {
     match event {

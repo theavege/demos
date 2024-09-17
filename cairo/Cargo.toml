@@ -9,3 +9,4 @@ edition = "2021"
 [dependencies]
 fltk = { version = "^1.4", features = ["use-ninja", "cairoext"] }
 cairo-rs = "^0.19"
+cascade = "1.0.1"

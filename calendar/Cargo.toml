@@ -7,5 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-fltk = { version = "^1.4", features = ["use-ninja"] }
-chrono = "^0.4"
+fltk = { version = "1", features = ["use-ninja"] }
+fltk-calendar = "0"
+chrono = "0"
+cascade = "1.0.1"
