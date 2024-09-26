@@ -8,3 +8,5 @@ edition = "2021"
 fltk = { version = "^1.4", features = ["use-ninja"] }
 cairo-rs = "0.18"
 cairo-blur = "^0.1"
+cascade = "1.0.1"
+glib = "0.20.4"
